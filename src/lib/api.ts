@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { parseTournamentListHTML, parseTournamentResultsHTML } from './scraper';
 import type { TournamentResultWithPlayer } from './scraper';
-import type { Tournament, TournamentResult } from '../types';
+import type { Tournament } from '../types';
 
 // Use local proxy in development, production URL in production
 const API_BASE = import.meta.env.DEV

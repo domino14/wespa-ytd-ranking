@@ -11,7 +11,6 @@ import {
   Alert,
   Tabs,
   Text,
-  Select,
   Badge,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -27,7 +26,6 @@ export function Admin() {
   const [endYear, setEndYear] = useState(new Date().getFullYear());
   const [activeYear, setActiveYear] = useState<YearConfig | null>(null);
   const [yearConfigs, setYearConfigs] = useState<YearConfig[]>([]);
-  const [computing, setComputing] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -85,7 +83,6 @@ export function Admin() {
       return;
     }
 
-    setComputing(true);
     try {
       const result = await calculateYTDStandings(activeYear.id);
 
@@ -108,8 +105,6 @@ export function Admin() {
         message: 'Failed to compute YTD standings',
         color: 'red',
       });
-    } finally {
-      setComputing(false);
     }
   };
 

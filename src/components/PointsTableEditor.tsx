@@ -93,7 +93,7 @@ export function PointsTableEditor() {
       const { error } = await supabase
         .from('points_config')
         .insert(
-          pointsTable.map((row, index) => ({
+          pointsTable.map((row) => ({
             position_range: row.position_range,
             platinum: row.platinum,
             gold: row.gold,
