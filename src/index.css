@@ -1,0 +1,12 @@
+/* Minimal global styles for WESPA YTD Rankings */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Let Mantine handle everything else */
