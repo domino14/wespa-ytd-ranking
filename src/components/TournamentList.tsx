@@ -145,15 +145,15 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Prepare tournaments to save (only tagged ones)
+      // Prepare tournaments to save (include untagged to properly remove tags)
       const tournamentsToSave = tournaments
-        .filter(t => categories[t.wespa_id])
+        .filter(t => t.wespa_id in categories) // Check if key exists, even if value is null
         .map(t => ({
           id: t.id,
           wespa_id: t.wespa_id,
           name: t.name,
           date: t.date,
-          category: categories[t.wespa_id],
+          category: categories[t.wespa_id] || null, // Explicitly set null for untagged
           url: t.url,
         }));
 
