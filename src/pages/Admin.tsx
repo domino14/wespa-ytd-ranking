@@ -16,7 +16,7 @@ import {
   Modal,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { LogOut, Trash2, Plus } from 'lucide-react';
+import { LogOut, Trash2, Plus, BarChart3 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { TournamentList } from '../components/TournamentList';
 import { PointsTableEditor } from '../components/PointsTableEditor';
@@ -259,7 +259,17 @@ export function Admin() {
   return (
     <Container size="xl" py="xl">
       <Group justify="space-between" mb="xl">
-        <Title order={1}>WESPA YTD Admin</Title>
+        <Group>
+          <Title order={1}>WESPA YTD Admin</Title>
+          <Button
+            leftSection={<BarChart3 size={16} />}
+            variant="light"
+            color="blue"
+            onClick={() => navigate('/')}
+          >
+            View Public Rankings
+          </Button>
+        </Group>
         <Button
           leftSection={<LogOut size={16} />}
           variant="light"

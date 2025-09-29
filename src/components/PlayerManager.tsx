@@ -16,6 +16,7 @@ import { notifications } from '@mantine/notifications';
 import { Search, Edit, RefreshCw, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { scrapeCountryForPlayer } from '../lib/tournamentImporter';
+import { COMMON_COUNTRIES } from '../lib/countries';
 
 interface Player {
   id: string;
@@ -36,14 +37,8 @@ export function PlayerManager() {
   const [refreshing, setRefreshing] = useState<string | null>(null);
   const [bulkScraping, setBulkScraping] = useState(false);
 
-  const commonCountries = [
-    'Australia', 'United States', 'England', 'Canada', 'New Zealand',
-    'South Africa', 'India', 'Pakistan', 'Thailand', 'Singapore',
-    'Malaysia', 'Philippines', 'Indonesia', 'Hong Kong', 'Nigeria', 'Ghana', 'Kenya',
-    'Scotland', 'Wales', 'Ireland', 'France', 'Germany', 'Italy', 'Spain',
-    'Trinidad and Tobago', 'Barbados', 'Jamaica', 'Malta', 'Bahrain',
-    'Kuwait', 'Qatar', 'UAE', 'Oman', 'Saudi Arabia', 'Bangladesh', 'Sri Lanka'
-  ];
+  // Use centralized country list
+  const commonCountries = COMMON_COUNTRIES;
 
   useEffect(() => {
     loadPlayers();

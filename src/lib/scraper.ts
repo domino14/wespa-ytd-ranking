@@ -1,4 +1,5 @@
 import type { Tournament, TournamentResult } from '../types';
+import { COUNTRY_CODE_TO_NAME } from './countries';
 
 export function parseTournamentListHTML(html: string): Omit<Tournament, 'id' | 'category'>[] {
   const parser = new DOMParser();
@@ -190,83 +191,13 @@ export function extractCountryFromPlayerHTML(html: string): string | null {
       if (flagMatch) {
         const countryCode = flagMatch[1].toUpperCase();
 
-        // Convert common country codes to full names
-        const countryMap: { [key: string]: string } = {
-          'USA': 'United States',
-          'AUS': 'Australia',
-          'CAN': 'Canada',
-          'ENG': 'England',
-          'NZL': 'New Zealand',
-          'ZAF': 'South Africa',
-          'IND': 'India',
-          'PAK': 'Pakistan',
-          'THA': 'Thailand',
-          'SGP': 'Singapore',
-          'MYS': 'Malaysia',
-          'PHL': 'Philippines',
-          'IDN': 'Indonesia',
-          'HKG': 'Hong Kong',
-          'NGA': 'Nigeria',
-          'GHA': 'Ghana',
-          'KEN': 'Kenya',
-          'SCO': 'Scotland',
-          'WAL': 'Wales',
-          'IRL': 'Ireland',
-          'FRA': 'France',
-          'DEU': 'Germany',
-          'ITA': 'Italy',
-          'ESP': 'Spain',
-          'POL': 'Poland',
-          'NLD': 'Netherlands',
-          'BEL': 'Belgium',
-          'SWE': 'Sweden',
-          'NOR': 'Norway',
-          'DNK': 'Denmark',
-          'FIN': 'Finland',
-          'ISR': 'Israel',
-          'JPN': 'Japan',
-          'LKA': 'Sri Lanka',
-          'BGD': 'Bangladesh',
-          'TTO': 'Trinidad and Tobago',
-          'BRB': 'Barbados',
-          'JAM': 'Jamaica',
-          'MLT': 'Malta',
-          'BHR': 'Bahrain',
-          'KWT': 'Kuwait',
-          'QAT': 'Qatar',
-          'ARE': 'UAE',
-          'UAE': 'United Arab Emirates',
-          'OMN': 'Oman',
-          'SAU': 'Saudi Arabia',
-          'ZMB': 'Zambia',
-          'ZWE': 'Zimbabwe',
-          'UGA': 'Uganda',
-          'TZA': 'Tanzania',
-          'BWA': 'Botswana',
-        };
-
-        return countryMap[countryCode] || countryCode;
+        return COUNTRY_CODE_TO_NAME[countryCode] || countryCode;
       }
     }
 
     // Fallback to alt text if it looks like a country
     if (alt && alt.length >= 2 && alt.length <= 4 && /^[A-Z]+$/i.test(alt)) {
-      const countryMap: { [key: string]: string } = {
-        'USA': 'United States',
-        'AUS': 'Australia',
-        'CAN': 'Canada',
-        'ENG': 'England',
-        'NZL': 'New Zealand',
-        'ZAF': 'South Africa',
-        'HKG': 'Hong Kong',
-        'IDN': 'Indonesia',
-        'SGP': 'Singapore',
-        'MYS': 'Malaysia',
-        'THA': 'Thailand',
-        'IND': 'India',
-        'PAK': 'Pakistan',
-      };
-      return countryMap[alt.toUpperCase()] || alt;
+      return COUNTRY_CODE_TO_NAME[alt.toUpperCase()] || alt;
     }
   }
 
@@ -290,20 +221,7 @@ export function extractCountryFromPlayerHTML(html: string): string | null {
   const flagMatch = html.match(flagPattern);
   if (flagMatch) {
     const countryCode = flagMatch[1].toUpperCase();
-    const countryMap: { [key: string]: string } = {
-      'USA': 'United States',
-      'AUS': 'Australia',
-      'CAN': 'Canada',
-      'ENG': 'England',
-      'HKG': 'Hong Kong',
-      'IDN': 'Indonesia',
-      'SGP': 'Singapore',
-      'MYS': 'Malaysia',
-      'THA': 'Thailand',
-      'IND': 'India',
-      'PAK': 'Pakistan',
-    };
-    return countryMap[countryCode] || countryCode;
+    return COUNTRY_CODE_TO_NAME[countryCode] || countryCode;
   }
 
   return null;
