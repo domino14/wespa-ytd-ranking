@@ -30,3 +30,8 @@ export async function fetchTournamentResults(
   const response = await axios.get(`${API_BASE}/tournament/${tournamentId}`);
   return parseTournamentResultsHTML(response.data, tournamentId.toString());
 }
+
+export async function fetchPlayerProfile(wespaId: number): Promise<string> {
+  const response = await axios.get(`${API_BASE}/player/${wespaId}`);
+  return response.data;
+}

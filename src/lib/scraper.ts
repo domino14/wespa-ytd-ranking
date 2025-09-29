@@ -86,8 +86,33 @@ export function parseTournamentResultsHTML(html: string, tournamentId: string): 
   const doc = parser.parseFromString(html, 'text/html');
   const results: TournamentResultWithPlayer[] = [];
 
-  // Find all result rows
-  const rows = doc.querySelectorAll('tr.roweven, tr.rowodd');
+  // Check if this is a multi-division tournament
+  const hasDivisions = doc.querySelector('#division_0') !== null;
+
+  let rows: NodeListOf<Element>;
+
+  if (hasDivisions) {
+    // Multi-division tournament: only get rows from Division 1 (division_0)
+    const division1Container = doc.querySelector('#division_0_standings');
+    if (division1Container) {
+      rows = division1Container.querySelectorAll('tr.roweven, tr.rowodd');
+      console.log(`Multi-division tournament detected. Scraping Division 1 only: ${rows.length} players`);
+    } else {
+      // Fallback: look for division_0 container
+      const division0Container = doc.querySelector('#division_0');
+      if (division0Container) {
+        rows = division0Container.querySelectorAll('tr.roweven, tr.rowodd');
+        console.log(`Multi-division tournament detected. Scraping Division 1 (fallback): ${rows.length} players`);
+      } else {
+        console.warn('Multi-division tournament detected but Division 1 container not found. Using all rows.');
+        rows = doc.querySelectorAll('tr.roweven, tr.rowodd');
+      }
+    }
+  } else {
+    // Single division tournament: get all result rows
+    rows = doc.querySelectorAll('tr.roweven, tr.rowodd');
+    console.log(`Single-division tournament: ${rows.length} players`);
+  }
 
   rows.forEach((row) => {
     const cells = row.querySelectorAll('td');
@@ -147,4 +172,139 @@ export function extractPlayerFromResult(row: HTMLElement): { wespaId: number; na
   const name = playerLink.textContent?.trim() || '';
 
   return { wespaId, name };
+}
+
+export function extractCountryFromPlayerHTML(html: string): string | null {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  // Method 1: Look for flag image pattern like <img src="../../flags/USA.png" alt="USA">
+  const flagImages = doc.querySelectorAll('img[src*="/flags/"]');
+  for (const img of flagImages) {
+    const src = img.getAttribute('src');
+    const alt = img.getAttribute('alt');
+
+    if (src) {
+      // Extract country code from flag path (e.g., "../../flags/USA.png" -> "USA")
+      const flagMatch = src.match(/\/flags\/([A-Z]{2,4})\.png/i);
+      if (flagMatch) {
+        const countryCode = flagMatch[1].toUpperCase();
+
+        // Convert common country codes to full names
+        const countryMap: { [key: string]: string } = {
+          'USA': 'United States',
+          'AUS': 'Australia',
+          'CAN': 'Canada',
+          'ENG': 'England',
+          'NZL': 'New Zealand',
+          'ZAF': 'South Africa',
+          'IND': 'India',
+          'PAK': 'Pakistan',
+          'THA': 'Thailand',
+          'SGP': 'Singapore',
+          'MYS': 'Malaysia',
+          'PHL': 'Philippines',
+          'IDN': 'Indonesia',
+          'HKG': 'Hong Kong',
+          'NGA': 'Nigeria',
+          'GHA': 'Ghana',
+          'KEN': 'Kenya',
+          'SCO': 'Scotland',
+          'WAL': 'Wales',
+          'IRL': 'Ireland',
+          'FRA': 'France',
+          'DEU': 'Germany',
+          'ITA': 'Italy',
+          'ESP': 'Spain',
+          'POL': 'Poland',
+          'NLD': 'Netherlands',
+          'BEL': 'Belgium',
+          'SWE': 'Sweden',
+          'NOR': 'Norway',
+          'DNK': 'Denmark',
+          'FIN': 'Finland',
+          'ISR': 'Israel',
+          'JPN': 'Japan',
+          'LKA': 'Sri Lanka',
+          'BGD': 'Bangladesh',
+          'TTO': 'Trinidad and Tobago',
+          'BRB': 'Barbados',
+          'JAM': 'Jamaica',
+          'MLT': 'Malta',
+          'BHR': 'Bahrain',
+          'KWT': 'Kuwait',
+          'QAT': 'Qatar',
+          'ARE': 'UAE',
+          'UAE': 'United Arab Emirates',
+          'OMN': 'Oman',
+          'SAU': 'Saudi Arabia',
+          'ZMB': 'Zambia',
+          'ZWE': 'Zimbabwe',
+          'UGA': 'Uganda',
+          'TZA': 'Tanzania',
+          'BWA': 'Botswana',
+        };
+
+        return countryMap[countryCode] || countryCode;
+      }
+    }
+
+    // Fallback to alt text if it looks like a country
+    if (alt && alt.length >= 2 && alt.length <= 4 && /^[A-Z]+$/i.test(alt)) {
+      const countryMap: { [key: string]: string } = {
+        'USA': 'United States',
+        'AUS': 'Australia',
+        'CAN': 'Canada',
+        'ENG': 'England',
+        'NZL': 'New Zealand',
+        'ZAF': 'South Africa',
+        'HKG': 'Hong Kong',
+        'IDN': 'Indonesia',
+        'SGP': 'Singapore',
+        'MYS': 'Malaysia',
+        'THA': 'Thailand',
+        'IND': 'India',
+        'PAK': 'Pakistan',
+      };
+      return countryMap[alt.toUpperCase()] || alt;
+    }
+  }
+
+  // Method 2: Look for country link pattern like <a href="/aardvark/html/rankings/USA.html">United States</a>
+  const countryLinks = doc.querySelectorAll('a[href*="/rankings/"]');
+  for (const link of countryLinks) {
+    const href = link.getAttribute('href');
+    const linkText = link.textContent?.trim();
+
+    if (href && linkText) {
+      // Check if the href looks like a country ranking page
+      const rankingMatch = href.match(/\/rankings\/([A-Z]{2,4})\.html/i);
+      if (rankingMatch && linkText.length > 2) {
+        return linkText;
+      }
+    }
+  }
+
+  // Method 3: Look for flag image in HTML source with regex (fallback)
+  const flagPattern = /\/flags\/([A-Z]{2,4})\.png/i;
+  const flagMatch = html.match(flagPattern);
+  if (flagMatch) {
+    const countryCode = flagMatch[1].toUpperCase();
+    const countryMap: { [key: string]: string } = {
+      'USA': 'United States',
+      'AUS': 'Australia',
+      'CAN': 'Canada',
+      'ENG': 'England',
+      'HKG': 'Hong Kong',
+      'IDN': 'Indonesia',
+      'SGP': 'Singapore',
+      'MYS': 'Malaysia',
+      'THA': 'Thailand',
+      'IND': 'India',
+      'PAK': 'Pakistan',
+    };
+    return countryMap[countryCode] || countryCode;
+  }
+
+  return null;
 }

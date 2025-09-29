@@ -129,6 +129,31 @@ export default {
       }
     }
 
+    // Route: /api/player/:wespaId - Fetch player profile for country extraction
+    if (url.pathname.startsWith('/api/player/') && request.method === 'GET') {
+      const wespaId = url.pathname.split('/').pop();
+
+      try {
+        const response = await fetch(`https://wespa.org/aardvark/html/players/${wespaId}.html`);
+        const html = await response.text();
+
+        return new Response(html, {
+          headers: {
+            'Content-Type': 'text/html',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ error: 'Failed to fetch player profile' }), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    }
+
     // Route: /api/standings/:yearId - Get standings for a specific year
     if (url.pathname.startsWith('/api/standings/') && request.method === 'GET') {
       try {

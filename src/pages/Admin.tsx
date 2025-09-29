@@ -20,6 +20,7 @@ import { LogOut, Trash2, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { TournamentList } from '../components/TournamentList';
 import { PointsTableEditor } from '../components/PointsTableEditor';
+import { PlayerManager } from '../components/PlayerManager';
 import { calculateYTDStandings } from '../lib/ytdCalculator';
 import type { YearConfig } from '../types';
 
@@ -272,6 +273,7 @@ export function Admin() {
       <Tabs defaultValue="tournaments">
         <Tabs.List>
           <Tabs.Tab value="tournaments">Tournaments</Tabs.Tab>
+          <Tabs.Tab value="players">Players</Tabs.Tab>
           <Tabs.Tab value="points">Points Table</Tabs.Tab>
           <Tabs.Tab value="settings">Settings</Tabs.Tab>
         </Tabs.List>
@@ -328,6 +330,10 @@ export function Admin() {
               />
             )}
           </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="players" pt="xl">
+          <PlayerManager />
         </Tabs.Panel>
 
         <Tabs.Panel value="points" pt="xl">

@@ -15,6 +15,7 @@ export interface Player {
   id: string;
   wespa_id: number;
   name: string;
+  country?: string;
   created_at?: string;
 }
 
@@ -39,6 +40,7 @@ export interface YTDStanding {
   year_config_id: string;
   player_id: string;
   player_name: string;
+  player_country?: string;
   total_points: number;
   tournaments_played: number;
   best_finish: number;

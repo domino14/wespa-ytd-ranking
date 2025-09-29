@@ -19,6 +19,7 @@ import { supabase } from '../lib/supabase';
 import type { YTDStanding, YearConfig } from '../types';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
+import { getCountryFlag, getCountryName } from '../lib/flagUtils';
 
 export function Standings() {
   const [standings, setStandings] = useState<YTDStanding[]>([]);
@@ -43,7 +44,8 @@ export function Standings() {
     if (searchTerm) {
       setFilteredStandings(
         standings.filter(s =>
-          s.player_name.toLowerCase().includes(searchTerm.toLowerCase())
+          s.player_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          s.player_country?.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     } else {
@@ -83,15 +85,24 @@ export function Standings() {
     try {
       const { data, error } = await supabase
         .from('ytd_standings')
-        .select('*')
+        .select(`
+          *,
+          players!inner(country)
+        `)
         .eq('year_config_id', selectedYear)
         .order('total_points', { ascending: false });
 
       if (error) throw error;
 
       if (data && data.length > 0) {
-        setStandings(data);
-        setFilteredStandings(data);
+        // Transform the data to flatten the player country
+        const transformedData = data.map(standing => ({
+          ...standing,
+          player_country: (standing.players as any)?.country || null
+        }));
+
+        setStandings(transformedData);
+        setFilteredStandings(transformedData);
         setLastUpdated(data[0].last_updated);
       } else {
         setStandings([]);
@@ -159,7 +170,7 @@ export function Standings() {
               w={300}
             />
             <TextInput
-              placeholder="Search players..."
+              placeholder="Search players or countries..."
               leftSection={<Search size={16} />}
               rightSection={
                 searchTerm && (
@@ -170,7 +181,7 @@ export function Standings() {
               }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.currentTarget.value)}
-              w={250}
+              w={280}
             />
           </Group>
         </Group>
@@ -187,7 +198,7 @@ export function Standings() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th w={140}>Rank</Table.Th>
-                  <Table.Th w={200}>Player</Table.Th>
+                  <Table.Th w={260}>Player</Table.Th>
                   <Table.Th ta="center">Tournaments</Table.Th>
                   <Table.Th ta="center">Best Finish</Table.Th>
                   <Table.Th ta="right">Total Points</Table.Th>
@@ -203,7 +214,30 @@ export function Standings() {
                       </Group>
                     </Table.Td>
                     <Table.Td>
-                      <Text fw={500}>{standing.player_name}</Text>
+                      <Group gap="xs" wrap="nowrap">
+                        {(() => {
+                          const flag = getCountryFlag(standing.player_country || null);
+                          const countryName = getCountryName(standing.player_country || null);
+
+                          return (
+                            <>
+                              {flag && (
+                                <Text size="lg" style={{ fontSize: '1.2em' }}>
+                                  {flag}
+                                </Text>
+                              )}
+                              <div>
+                                <Text fw={500}>{standing.player_name}</Text>
+                                {countryName && !flag && (
+                                  <Text size="xs" c="dimmed">
+                                    {countryName}
+                                  </Text>
+                                )}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </Group>
                     </Table.Td>
                     <Table.Td ta="center">
                       <Badge variant="light">{standing.tournaments_played}</Badge>

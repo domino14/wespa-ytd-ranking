@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { fetchTournamentResults } from './api';
+import { fetchTournamentResults, fetchPlayerProfile } from './api';
+import { extractCountryFromPlayerHTML } from './scraper';
 
 export interface ImportProgress {
   current: number;
@@ -7,6 +8,8 @@ export interface ImportProgress {
   tournamentName: string;
   status: 'importing' | 'success' | 'error' | 'skipped';
 }
+
+// Rate limiting helper - removed as bulk scraping moved to admin panel
 
 export async function importTournamentResults(
   tournamentId: string,
@@ -106,6 +109,8 @@ export async function importTournamentResults(
           throw new Error('Failed to save tournament results');
         }
       }
+
+      // Note: Country scraping moved to separate admin action to avoid timeout issues
     }
 
     onProgress?.({
@@ -172,4 +177,16 @@ export async function importAllMissingResults(
   }
 
   return { imported, skipped, failed };
+}
+
+// Note: Bulk country scraping moved to PlayerManager component for better UX and timeout handling
+
+export async function scrapeCountryForPlayer(wespaId: number): Promise<string | null> {
+  try {
+    const html = await fetchPlayerProfile(wespaId);
+    return extractCountryFromPlayerHTML(html);
+  } catch (error) {
+    console.error(`Failed to scrape country for player ${wespaId}:`, error);
+    return null;
+  }
 }

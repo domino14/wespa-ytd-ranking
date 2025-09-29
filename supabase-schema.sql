@@ -5,6 +5,7 @@ CREATE TABLE players (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   wespa_id INTEGER UNIQUE NOT NULL,
   name TEXT NOT NULL,
+  country TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
