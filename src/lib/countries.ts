@@ -10,6 +10,7 @@ export const COUNTRY_CODE_TO_NAME: { [key: string]: string } = {
   'ENG': 'England',
   'SCO': 'Scotland',
   'WAL': 'Wales',
+  'NIR': 'Northern Ireland',
   'IRL': 'Ireland',
   'FRA': 'France',
   'DEU': 'Germany',
@@ -77,6 +78,7 @@ export const COUNTRY_CODE_TO_NAME: { [key: string]: string } = {
   'SOM': 'Somalia',
   'RWA': 'Rwanda',
   'BDI': 'Burundi',
+  'SLE': 'Sierra Leone',
 
   // Asia
   'IND': 'India',
@@ -120,6 +122,7 @@ export const COUNTRY_TO_FLAG: { [key: string]: string } = {
   'England': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
   'Scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
   'Wales': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+  'Northern Ireland': '🇬🇧',
   'Ireland': '🇮🇪',
   'France': '🇫🇷',
   'Germany': '🇩🇪',
@@ -189,6 +192,7 @@ export const COUNTRY_TO_FLAG: { [key: string]: string } = {
   'Somalia': '🇸🇴',
   'Rwanda': '🇷🇼',
   'Burundi': '🇧🇮',
+  'Sierra Leone': '🇸🇱',
 
   // Asia
   'India': '🇮🇳',
