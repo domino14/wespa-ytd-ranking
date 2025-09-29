@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Paper,
   TextInput,
@@ -25,18 +25,21 @@ export function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
-  // Check for password reset token on component mount
+  // Handle password recovery
   useEffect(() => {
-    const token = searchParams.get('token');
-    const type = searchParams.get('type');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsResetting(true);
+        setError('');
+        setSuccess('');
+      }
+    });
 
-    if (token && type === 'recovery') {
-      setIsResetting(true);
-      // Session is automatically set by Supabase when the recovery link is clicked
-    }
-  }, [searchParams]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +68,6 @@ export function Login() {
 
       setSuccess('Password updated successfully! You can now login.');
       setIsResetting(false);
-      // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     } catch (err: any) {
       setError(err.message || 'Failed to reset password');
@@ -144,6 +146,7 @@ export function Login() {
         <Title ta="center" order={2}>
           {isResetting ? 'Reset Your Password' : 'WESPA YTD Admin Login'}
         </Title>
+
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
         {isResetting ? (
