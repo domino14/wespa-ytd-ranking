@@ -91,10 +91,10 @@ export default {
       }
     }
 
-    // Route: /api/years - Get available years
-    if (url.pathname === '/api/years' && request.method === 'GET') {
+    // Route: /api/seasons - Get available seasons
+    if (url.pathname === '/api/seasons' && request.method === 'GET') {
       try {
-        const response = await fetch(`${env.SUPABASE_URL}/rest/v1/year_configs?select=*&order=year.desc`, {
+        const response = await fetch(`${env.SUPABASE_URL}/rest/v1/year_configs?select=*&order=start_date.desc`, {
           headers: {
             'apikey': env.SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
@@ -117,7 +117,7 @@ export default {
         });
       } catch (error) {
         return new Response(JSON.stringify({
-          error: 'Failed to fetch years',
+          error: 'Failed to fetch seasons',
           message: error instanceof Error ? error.message : 'Unknown error'
         }), {
           status: 500,

@@ -58,7 +58,7 @@ export interface PointsTable {
 
 export interface YearConfig {
   id: string;
-  year: number;
+  name: string;
   start_date: string;
   end_date: string;
   is_active: boolean;

@@ -17,14 +17,14 @@ All endpoints are publicly accessible and do not require authentication.
 
 Get a list of all configured tournament seasons.
 
-**Endpoint:** `GET /years`
+**Endpoint:** `GET /seasons`
 
 **Response:**
 ```json
 [
   {
     "id": "550e8400-e29b-41d4-a716-446655440000",
-    "year": 2025,
+    "name": "2024-2025",
     "start_date": "2024-09-01",
     "end_date": "2025-08-31",
     "is_active": true,
@@ -33,7 +33,7 @@ Get a list of all configured tournament seasons.
   },
   {
     "id": "550e8400-e29b-41d4-a716-446655440001",
-    "year": 2024,
+    "name": "2023-2024",
     "start_date": "2023-09-01",
     "end_date": "2024-08-31",
     "is_active": false,
@@ -45,7 +45,7 @@ Get a list of all configured tournament seasons.
 
 **Fields:**
 - `id`: Unique identifier for the season (UUID)
-- `year`: Display year for the season
+- `name`: Display name for the season (e.g., "2024-2025", "Summer 2025")
 - `start_date`: Season start date (YYYY-MM-DD)
 - `end_date`: Season end date (YYYY-MM-DD)
 - `is_active`: Whether this is the currently active season
@@ -159,7 +159,7 @@ All errors return JSON with the following format:
 
 ## Caching
 
-- **Seasons** (`/years`): Cached for 5 minutes
+- **Seasons** (`/seasons`): Cached for 5 minutes
 - **Standings** (`/standings/*`): Cached for 3 minutes
 - **Tournament data**: No caching (proxied directly from WESPA)
 
@@ -182,7 +182,7 @@ Access-Control-Allow-Origin: *
 
 ```javascript
 // Get available seasons
-const seasons = await fetch('https://wespa-ytd.xword.club/api/years')
+const seasons = await fetch('https://wespa-ytd.xword.club/api/seasons')
   .then(res => res.json());
 
 // Get current standings
@@ -199,7 +199,7 @@ const seasonStandings = await fetch(`https://wespa-ytd.xword.club/api/standings/
 
 ```bash
 # Get seasons
-curl https://wespa-ytd.xword.club/api/years
+curl https://wespa-ytd.xword.club/api/seasons
 
 # Get current standings
 curl https://wespa-ytd.xword.club/api/standings/current

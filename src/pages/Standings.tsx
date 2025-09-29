@@ -12,11 +12,13 @@ import {
   TextInput,
   ActionIcon,
   Select,
+  Button,
 } from '@mantine/core';
-import { Search, Trophy, X, Calendar } from 'lucide-react';
+import { Search, Trophy, X, Calendar, Settings } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { YTDStanding, YearConfig } from '../types';
 import { format } from 'date-fns';
+import { Link } from 'react-router-dom';
 
 export function Standings() {
   const [standings, setStandings] = useState<YTDStanding[]>([]);
@@ -54,7 +56,7 @@ export function Standings() {
       const { data, error } = await supabase
         .from('year_configs')
         .select('*')
-        .order('year', { ascending: false });
+        .order('start_date', { ascending: false });
 
       if (error) throw error;
 
@@ -104,11 +106,11 @@ export function Standings() {
   };
 
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return <Badge color="yellow" leftSection={<Trophy size={14} />}>1st</Badge>;
-    if (rank === 2) return <Badge color="gray">2nd</Badge>;
-    if (rank === 3) return <Badge color="orange">3rd</Badge>;
-    if (rank <= 10) return <Badge color="blue">Top 10</Badge>;
-    if (rank <= 20) return <Badge color="cyan">Top 20</Badge>;
+    if (rank === 1) return <Badge color="yellow" leftSection={<Trophy size={14} />} size="md" style={{ minWidth: '60px' }}>1st</Badge>;
+    if (rank === 2) return <Badge color="gray" size="md" style={{ minWidth: '50px' }}>2nd</Badge>;
+    if (rank === 3) return <Badge color="orange" size="md" style={{ minWidth: '50px' }}>3rd</Badge>;
+    if (rank <= 10) return <Badge color="blue" size="md" style={{ minWidth: '70px' }}>Top 10</Badge>;
+    if (rank <= 20) return <Badge color="cyan" size="md" style={{ minWidth: '70px' }}>Top 20</Badge>;
     return null;
   };
 
@@ -136,6 +138,15 @@ export function Standings() {
             )}
           </div>
           <Group>
+            <Button
+              component={Link}
+              to="/admin"
+              leftSection={<Settings size={16} />}
+              variant="light"
+              color="gray"
+            >
+              Admin
+            </Button>
             <Select
               leftSection={<Calendar size={16} />}
               placeholder="Select Year"
@@ -143,7 +154,7 @@ export function Standings() {
               onChange={setSelectedYear}
               data={yearConfigs.map(config => ({
                 value: config.id,
-                label: `${config.year} Season (${config.start_date} to ${config.end_date})`,
+                label: `${config.name} (${config.start_date} to ${config.end_date})`,
               }))}
               w={300}
             />
@@ -175,8 +186,8 @@ export function Standings() {
             <Table striped highlightOnHover>
               <Table.Thead>
                 <Table.Tr>
-                  <Table.Th w={80}>Rank</Table.Th>
-                  <Table.Th>Player</Table.Th>
+                  <Table.Th w={140}>Rank</Table.Th>
+                  <Table.Th w={200}>Player</Table.Th>
                   <Table.Th ta="center">Tournaments</Table.Th>
                   <Table.Th ta="center">Best Finish</Table.Th>
                   <Table.Th ta="right">Total Points</Table.Th>
@@ -186,7 +197,7 @@ export function Standings() {
                 {filteredStandings.map((standing, index) => (
                   <Table.Tr key={standing.player_id}>
                     <Table.Td>
-                      <Group gap="xs">
+                      <Group gap="xs" wrap="nowrap" align="center">
                         <Text fw={500}>{index + 1}</Text>
                         {getRankBadge(index + 1)}
                       </Group>

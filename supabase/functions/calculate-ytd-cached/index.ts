@@ -168,11 +168,15 @@ serve(async (req) => {
     // Convert to array and sort by points
     const standings = Array.from(playerPoints.values())
       .sort((a, b) => b.total_points - a.total_points)
-      .map((standing) => ({
-        ...standing,
-        year_config_id: yearConfigId,
-        last_updated: new Date().toISOString(),
-      }))
+      .map((standing) => {
+        // Remove tournaments array as it's not in the database schema
+        const { tournaments, ...standingData } = standing
+        return {
+          ...standingData,
+          year_config_id: yearConfigId,
+          last_updated: new Date().toISOString(),
+        }
+      })
 
     // Save standings to cache (using transaction-like approach)
     // First, delete existing standings for this year

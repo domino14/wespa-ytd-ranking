@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   Badge,
@@ -16,7 +16,7 @@ import {
   Indicator,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { Save, RefreshCw, Download, Database, Info, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, RefreshCw, Download, Database, Info, CheckCircle } from 'lucide-react';
 import type { Tournament, TournamentCategory } from '../types';
 import { fetchTournaments } from '../lib/api';
 import { supabase } from '../lib/supabase';
@@ -24,8 +24,8 @@ import { importAllMissingResults } from '../lib/tournamentImporter';
 import type { ImportProgress } from '../lib/tournamentImporter';
 
 interface TournamentListProps {
-  startYear: string;
-  endYear: string;
+  startDate: string;
+  endDate: string;
   onComputeYTD: () => void;
 }
 
@@ -37,9 +37,10 @@ const categoryColors: Record<TournamentCategory, string> = {
   invitational: 'blue',
 };
 
-export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentListProps) {
+export function TournamentList({ startDate, endDate, onComputeYTD }: TournamentListProps) {
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<ImportProgress | null>(null);
@@ -47,22 +48,70 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
   const [categories, setCategories] = useState<Record<number, TournamentCategory | undefined>>({});
   const [cachedStatus, setCachedStatus] = useState<Record<string, boolean>>({});
   const [missingCount, setMissingCount] = useState(0);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
-  const loadTournaments = async () => {
+  // Helper function to check if tournament is within season range
+  const isWithinSeasonRange = (tournamentDate: string) => {
+    return tournamentDate >= startDate && tournamentDate <= endDate;
+  };
+
+  // Load tournaments from database immediately
+  const loadFromDatabase = async () => {
     setLoading(true);
     try {
-      // Fetch from WESPA - try 2024 if 2025 has no data
-      console.log('Searching for tournaments:', startYear, endYear);
+      // Fetch existing data from Supabase only - include all tournaments from the year range
+      const startYear = startDate.split('-')[0];
+      const endYear = endDate.split('-')[0];
+      const { data: existingTournaments, error } = await supabase
+        .from('tournaments')
+        .select('*')
+        .gte('date', `${startYear}-01-01`)
+        .lte('date', `${endYear}-12-31`)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      if (existingTournaments && existingTournaments.length > 0) {
+        setTournaments(existingTournaments);
+
+        // Set categories from database
+        const cats: Record<number, TournamentCategory | undefined> = {};
+        existingTournaments.forEach(t => {
+          if (t.category) {
+            cats[t.wespa_id] = t.category;
+          }
+        });
+        setCategories(cats);
+
+        // Check cache status for tagged tournaments
+        await checkCacheStatus(existingTournaments.filter(t => t.category));
+      }
+    } catch (error) {
+      console.error('Failed to load tournaments from database:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Sync with WESPA to get latest tournaments
+  const syncWithWESPA = async () => {
+    setSyncing(true);
+    try {
+      // Extract year range from dates for WESPA API
+      const startYear = startDate.split('-')[0];
+      const endYear = endDate.split('-')[0];
+
+      console.log('Syncing with WESPA:', startYear, endYear, `(${startDate} to ${endDate})`);
       const wespaData = await fetchTournaments(startYear, endYear);
 
-      // Fetch existing data from Supabase
+      // Fetch existing data from Supabase for merging (include all tournaments from the year range)
       const { data: existingTournaments } = await supabase
         .from('tournaments')
         .select('*')
         .gte('date', `${startYear}-01-01`)
         .lte('date', `${endYear}-12-31`);
 
-      // Merge data
+      // Merge data - WESPA data is authoritative for tournament existence
       const mergedTournaments = wespaData.map(t => {
         const existing = existingTournaments?.find(e => e.wespa_id === t.wespa_id);
         return {
@@ -74,7 +123,7 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
 
       setTournaments(mergedTournaments);
 
-      // Set categories
+      // Update categories
       const cats: Record<number, TournamentCategory | undefined> = {};
       mergedTournaments.forEach(t => {
         if (t.category) {
@@ -85,18 +134,36 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
 
       // Check cache status for tagged tournaments
       await checkCacheStatus(mergedTournaments.filter(t => t.category));
+
+      // Update sync time
+      setLastSyncTime(new Date());
+
+      notifications.show({
+        title: 'Sync Complete',
+        message: `Found ${mergedTournaments.length} tournaments from WESPA`,
+        color: 'green',
+      });
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load tournaments',
-        color: 'red',
+        title: 'Sync Failed',
+        message: 'Failed to sync with WESPA. Using cached data.',
+        color: 'yellow',
       });
     } finally {
-      setLoading(false);
+      setSyncing(false);
     }
   };
 
-  // Removed automatic loading - tournaments are only loaded when "Refresh" is clicked
+  // Load on mount: first from DB (instant), then sync with WESPA (background)
+  useEffect(() => {
+    loadFromDatabase();
+    // Small delay to let DB data show first
+    const syncTimer = setTimeout(() => {
+      syncWithWESPA();
+    }, 500);
+
+    return () => clearTimeout(syncTimer);
+  }, [startDate, endDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkCacheStatus = async (taggedTournaments: Tournament[]) => {
     if (taggedTournaments.length === 0) return;
@@ -145,24 +212,68 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Prepare tournaments to save (include untagged to properly remove tags)
-      const tournamentsToSave = tournaments
-        .filter(t => t.wespa_id in categories) // Check if key exists, even if value is null
-        .map(t => ({
-          id: t.id,
-          wespa_id: t.wespa_id,
-          name: t.name,
-          date: t.date,
-          category: categories[t.wespa_id] || null, // Explicitly set null for untagged
-          url: t.url,
-        }));
+      // Get all tournaments that have changes (tagged or untagged)
+      const changedTournaments = tournaments.filter(t => {
+        const currentCategory = categories[t.wespa_id];
+        const dbCategory = t.category;
+        // Include if category has changed (including null changes)
+        return currentCategory !== dbCategory || t.wespa_id in categories;
+      });
 
-      // Upsert to Supabase
-      const { error } = await supabase
-        .from('tournaments')
-        .upsert(tournamentsToSave, { onConflict: 'wespa_id' });
+      // Prepare tournaments to save
+      const tournamentsToSave = changedTournaments.map(t => ({
+        id: t.id,
+        wespa_id: t.wespa_id,
+        name: t.name,
+        date: t.date,
+        category: categories[t.wespa_id] || null, // Explicitly set null for untagged
+        url: t.url,
+      }));
 
-      if (error) throw error;
+      // Find tournaments that are being untagged (currently have null category but exist in categories state)
+      const untaggedTournamentIds = changedTournaments
+        .filter(t => categories[t.wespa_id] === undefined && t.category !== null)
+        .map(t => t.id);
+
+      // Delete results for untagged tournaments first
+      if (untaggedTournamentIds.length > 0) {
+        console.log('Deleting results for untagged tournaments:', untaggedTournamentIds);
+        const { error: deleteError } = await supabase
+          .from('tournament_results')
+          .delete()
+          .in('tournament_id', untaggedTournamentIds);
+
+        if (deleteError) {
+          console.error('Failed to delete results for untagged tournaments:', deleteError);
+        }
+      }
+
+      // Upsert tournaments to Supabase
+      if (tournamentsToSave.length > 0) {
+        const { error } = await supabase
+          .from('tournaments')
+          .upsert(tournamentsToSave, { onConflict: 'wespa_id' });
+
+        if (error) throw error;
+      }
+
+      // Update local tournament state to reflect saved changes
+      const updatedTournaments = tournaments.map(t => {
+        if (t.wespa_id in categories) {
+          return { ...t, category: categories[t.wespa_id] || undefined };
+        }
+        return t;
+      });
+      setTournaments(updatedTournaments);
+
+      // Clear untagged entries from categories state
+      const cleanedCategories = { ...categories };
+      Object.keys(cleanedCategories).forEach(key => {
+        if (cleanedCategories[parseInt(key)] === undefined) {
+          delete cleanedCategories[parseInt(key)];
+        }
+      });
+      setCategories(cleanedCategories);
 
       notifications.show({
         title: 'Success',
@@ -170,6 +281,7 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
         color: 'green',
       });
     } catch (error) {
+      console.error('Save error:', error);
       notifications.show({
         title: 'Error',
         message: 'Failed to save tournaments',
@@ -178,6 +290,14 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSaveAndImport = async () => {
+    // First save all tag changes (including deleting results for untagged)
+    await handleSave();
+
+    // Then import results for tagged tournaments
+    await handleImportResults();
   };
 
   const handleSaveAndCompute = async () => {
@@ -242,22 +362,34 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
   }
 
   const taggedCount = Object.values(categories).filter(Boolean).length;
-  const cachedCount = Object.values(cachedStatus).filter(Boolean).length;
+
+  // Check if there are any changes to save (tagged, untagged, or modified)
+  const hasChanges = tournaments.some(t => {
+    const currentCategory = categories[t.wespa_id];
+    const dbCategory = t.category;
+    return currentCategory !== dbCategory || t.wespa_id in categories;
+  });
+
+  // Count tournaments within season range
+  const tournamentsInRange = tournaments.filter(t => isWithinSeasonRange(t.date));
+  const taggedInRangeCount = tournamentsInRange.filter(t => categories[t.wespa_id]).length;
 
   return (
     <Stack>
       {/* Workflow Guidance */}
-      {taggedCount > 0 && missingCount > 0 && (
+      {taggedCount === 0 && (
         <Alert
-          icon={<AlertCircle size={16} />}
-          title="Action Required: Import Tournament Results"
-          color="yellow"
+          icon={<Info size={16} />}
+          title="Getting Started"
+          color="blue"
           variant="light"
         >
           <Text size="sm">
-            <strong>Step 1:</strong> {missingCount} tagged tournament(s) need their results imported before calculating YTD standings.
+            <strong>Step 1:</strong> Tag tournaments with their categories (Platinum, Gold, etc.)
             <br />
-            <strong>Step 2:</strong> After importing, click "Save & Compute YTD" to generate standings.
+            <strong>Step 2:</strong> Click "Save Tags & Import" to save and import results
+            <br />
+            <strong>Step 3:</strong> Click "Compute YTD" to calculate standings
           </Text>
         </Alert>
       )}
@@ -275,36 +407,19 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
         </Alert>
       )}
 
-      {taggedCount === 0 && (
-        <Alert
-          icon={<Info size={16} />}
-          title="Getting Started"
-          color="blue"
-          variant="light"
-        >
-          <Text size="sm">
-            <strong>Step 1:</strong> Tag tournaments with their categories (Platinum, Gold, etc.)
-            <br />
-            <strong>Step 2:</strong> Import tournament results from WESPA
-            <br />
-            <strong>Step 3:</strong> Calculate YTD standings
-          </Text>
-        </Alert>
-      )}
-
       <Group justify="space-between">
         <Group>
           <Text size="lg" fw={500}>
-            Found {tournaments.length} tournaments
+            Found {tournaments.length} tournaments ({tournamentsInRange.length} in season range)
           </Text>
-          {taggedCount > 0 && (
+          {syncing && (
             <Badge color="blue" variant="light">
-              {taggedCount} tagged
+              Syncing with WESPA...
             </Badge>
           )}
-          {cachedCount > 0 && (
-            <Badge color="green" variant="light">
-              {cachedCount} cached
+          {lastSyncTime && !syncing && (
+            <Badge color="gray" variant="light">
+              Last sync: {lastSyncTime.toLocaleTimeString()}
             </Badge>
           )}
           {missingCount > 0 && (
@@ -317,56 +432,29 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
           <Button
             leftSection={<RefreshCw size={16} />}
             variant="light"
-            onClick={loadTournaments}
+            onClick={syncWithWESPA}
+            loading={syncing}
           >
-            Refresh
+            Sync with WESPA
           </Button>
-
-          <Tooltip
-            label={
-              taggedCount === 0
-                ? "Tag tournaments first"
-                : missingCount === 0
-                ? "All results already cached"
-                : `Import results for ${missingCount} tournament(s)`
-            }
-          >
-            <div>
-              <Indicator
-                disabled={missingCount === 0}
-                color="yellow"
-                size={10}
-                offset={7}
-              >
-                <Button
-                  leftSection={<Download size={16} />}
-                  variant="light"
-                  color="blue"
-                  onClick={handleImportResults}
-                  loading={importing}
-                  disabled={taggedCount === 0}
-                >
-                  Import Results
-                </Button>
-              </Indicator>
-            </div>
-          </Tooltip>
 
           <Button
             leftSection={<Save size={16} />}
-            onClick={handleSave}
-            loading={saving}
+            onClick={handleSaveAndImport}
+            loading={saving || importing}
+            disabled={!hasChanges}
+            color="blue"
           >
-            Save Tags
+            Save Tags & Import
           </Button>
 
           <Tooltip
             label={
-              taggedCount === 0
-                ? "Tag tournaments first"
+              taggedInRangeCount === 0
+                ? "Tag tournaments within the season range first"
                 : missingCount > 0
-                ? "Import tournament results first"
-                : "Calculate YTD standings"
+                ? "Some tournaments need import, but you can still compute YTD with current data"
+                : "Calculate YTD standings with current tournament data"
             }
           >
             <div>
@@ -382,7 +470,7 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
                   loading={saving}
                   color={missingCount > 0 ? "yellow" : "green"}
                   variant={missingCount > 0 ? "light" : "filled"}
-                  disabled={taggedCount === 0}
+                  disabled={false}
                 >
                   {missingCount > 0 ? "Import First!" : "Compute YTD"}
                 </Button>
@@ -404,20 +492,33 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
         </Table.Thead>
         <Table.Tbody>
           {tournaments
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .map((tournament) => (
-              <Table.Tr key={tournament.wespa_id}>
-                <Table.Td>{tournament.date}</Table.Td>
-                <Table.Td>
-                  <a
-                    href={tournament.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: 'none', color: 'inherit' }}
-                  >
-                    {tournament.name}
-                  </a>
-                </Table.Td>
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Most recent first
+            .map((tournament) => {
+              const isInRange = isWithinSeasonRange(tournament.date);
+              return (
+                <Table.Tr
+                  key={tournament.wespa_id}
+                  style={{
+                    opacity: isInRange ? 1 : 0.5,
+                    backgroundColor: isInRange ? undefined : 'var(--mantine-color-gray-1)'
+                  }}
+                >
+                  <Table.Td>{tournament.date}</Table.Td>
+                  <Table.Td>
+                    <a
+                      href={tournament.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none', color: 'inherit' }}
+                    >
+                      {tournament.name}
+                    </a>
+                    {!isInRange && (
+                      <Badge size="xs" color="gray" variant="light" ml="xs">
+                        Outside Season
+                      </Badge>
+                    )}
+                  </Table.Td>
                 <Table.Td>
                   <Select
                     value={categories[tournament.wespa_id] || ''}
@@ -475,7 +576,8 @@ export function TournamentList({ startYear, endYear, onComputeYTD }: TournamentL
                   </Button>
                 </Table.Td>
               </Table.Tr>
-            ))}
+            );
+          })}
         </Table.Tbody>
       </Table>
 
