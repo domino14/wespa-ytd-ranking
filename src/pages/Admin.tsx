@@ -186,6 +186,45 @@ export function Admin() {
     setDeleteModalOpen(true);
   };
 
+  const handleSetAsActive = async (yearConfig: YearConfig) => {
+    try {
+      // First, deactivate all existing active years
+      const { error: deactivateError } = await supabase
+        .from('year_configs')
+        .update({ is_active: false })
+        .eq('is_active', true);
+
+      if (deactivateError) throw deactivateError;
+
+      // Then activate the selected year
+      const { error: activateError } = await supabase
+        .from('year_configs')
+        .update({ is_active: true })
+        .eq('id', yearConfig.id);
+
+      if (activateError) throw activateError;
+
+      // Update local state
+      setActiveYear(yearConfig);
+
+      notifications.show({
+        title: 'Success',
+        message: `${yearConfig.name} is now the active season`,
+        color: 'green',
+      });
+
+      // Reload year configs to reflect the change
+      loadYearConfigs();
+    } catch (error) {
+      console.error('Failed to set active year:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to set active season',
+        color: 'red',
+      });
+    }
+  };
+
   const confirmDeleteYear = async () => {
     if (!yearToDelete) return;
 
@@ -364,8 +403,17 @@ export function Admin() {
                       </Text>
                     </div>
                     <Group>
-                      {config.is_active && (
+                      {config.is_active ? (
                         <Badge color="blue">Active</Badge>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="light"
+                          color="green"
+                          onClick={() => handleSetAsActive(config)}
+                        >
+                          Set as Active
+                        </Button>
                       )}
                       <ActionIcon
                         color="red"
