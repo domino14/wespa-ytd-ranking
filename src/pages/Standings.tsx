@@ -19,7 +19,7 @@ import { supabase } from '../lib/supabase';
 import type { YTDStanding, YearConfig } from '../types';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
-import { getCountryFlag, getCountryName } from '../lib/flagUtils';
+import { FlagDisplay } from '../components/FlagDisplay';
 
 export function Standings() {
   const [standings, setStandings] = useState<YTDStanding[]>([]);
@@ -215,28 +215,11 @@ export function Standings() {
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs" wrap="nowrap">
-                        {(() => {
-                          const flag = getCountryFlag(standing.player_country || null);
-                          const countryName = getCountryName(standing.player_country || null);
-
-                          return (
-                            <>
-                              {flag && (
-                                <Text size="lg" style={{ fontSize: '1.2em' }}>
-                                  {flag}
-                                </Text>
-                              )}
-                              <div>
-                                <Text fw={500}>{standing.player_name}</Text>
-                                {countryName && !flag && (
-                                  <Text size="xs" c="dimmed">
-                                    {countryName}
-                                  </Text>
-                                )}
-                              </div>
-                            </>
-                          );
-                        })()}
+                        <FlagDisplay
+                          countryCodeOrName={standing.player_country || null}
+                          size="md"
+                        />
+                        <Text fw={500}>{standing.player_name}</Text>
                       </Group>
                     </Table.Td>
                     <Table.Td ta="center">

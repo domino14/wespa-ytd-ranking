@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Table,
   NumberInput,
@@ -9,12 +9,12 @@ import {
   Title,
   Text,
   Alert,
-} from '@mantine/core';
-import { notifications } from '@mantine/notifications';
-import { Save, RotateCcw } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import type { PointsTable } from '../types';
-import { clearPointsCache, defaultPointsTable } from '../lib/pointsTable';
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { Save, RotateCcw } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import type { PointsTable } from "../types";
+import { clearPointsCache, defaultPointsTable } from "../lib/pointsTable";
 
 export function PointsTableEditor() {
   const [pointsTable, setPointsTable] = useState<PointsTable[]>([]);
@@ -22,16 +22,12 @@ export function PointsTableEditor() {
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    loadPointsTable();
-  }, []);
-
   const sortPointsTable = (data: PointsTable[]) => {
     return [...data].sort((a, b) => {
       const parsePosition = (range: string) => {
-        if (range === '100+') return 101; // Put 100+ at the end
-        if (range.includes('-')) {
-          return parseInt(range.split('-')[0]); // Use the first number for ranges
+        if (range === "101+") return 101; // Put 101+ at the end
+        if (range.includes("-")) {
+          return parseInt(range.split("-")[0]); // Use the first number for ranges
         }
         return parseInt(range); // Single numbers
       };
@@ -43,9 +39,7 @@ export function PointsTableEditor() {
   const loadPointsTable = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('points_config')
-        .select('*');
+      const { data, error } = await supabase.from("points_config").select("*");
 
       if (error) throw error;
 
@@ -57,18 +51,23 @@ export function PointsTableEditor() {
       }
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to load points configuration',
-        color: 'red',
+        title: "Error",
+        message: "Failed to load points configuration",
+        color: "red",
       });
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadPointsTable();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handlePointChange = (
     index: number,
-    category: 'platinum' | 'gold' | 'silver' | 'bronze' | 'invitational',
+    category: "platinum" | "gold" | "silver" | "bronze" | "invitational",
     value: number
   ) => {
     const newTable = [...pointsTable];
@@ -85,23 +84,21 @@ export function PointsTableEditor() {
     try {
       // Delete existing entries
       await supabase
-        .from('points_config')
+        .from("points_config")
         .delete()
-        .gte('id', '00000000-0000-0000-0000-000000000000');
+        .gte("id", "00000000-0000-0000-0000-000000000000");
 
       // Insert new entries
-      const { error } = await supabase
-        .from('points_config')
-        .insert(
-          pointsTable.map((row) => ({
-            position_range: row.position_range,
-            platinum: row.platinum,
-            gold: row.gold,
-            silver: row.silver,
-            bronze: row.bronze,
-            invitational: row.invitational,
-          }))
-        );
+      const { error } = await supabase.from("points_config").insert(
+        pointsTable.map((row) => ({
+          position_range: row.position_range,
+          platinum: row.platinum,
+          gold: row.gold,
+          silver: row.silver,
+          bronze: row.bronze,
+          invitational: row.invitational,
+        }))
+      );
 
       if (error) throw error;
 
@@ -109,16 +106,16 @@ export function PointsTableEditor() {
       clearPointsCache();
 
       notifications.show({
-        title: 'Success',
-        message: 'Points table saved successfully',
-        color: 'green',
+        title: "Success",
+        message: "Points table saved successfully",
+        color: "green",
       });
       setHasChanges(false);
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: 'Failed to save points table',
-        color: 'red',
+        title: "Error",
+        message: "Failed to save points table",
+        color: "red",
       });
     } finally {
       setSaving(false);
@@ -129,9 +126,9 @@ export function PointsTableEditor() {
     setPointsTable(defaultPointsTable);
     setHasChanges(true);
     notifications.show({
-      title: 'Reset',
-      message: 'Points table reset to default values. Click Save to apply.',
-      color: 'blue',
+      title: "Reset",
+      message: "Points table reset to default values. Click Save to apply.",
+      color: "blue",
     });
   };
 
@@ -187,7 +184,9 @@ export function PointsTableEditor() {
                 <Table.Td>
                   <NumberInput
                     value={row.platinum}
-                    onChange={(value) => handlePointChange(index, 'platinum', value as number)}
+                    onChange={(value) =>
+                      handlePointChange(index, "platinum", value as number)
+                    }
                     min={0}
                     step={25}
                     w={100}
@@ -196,7 +195,9 @@ export function PointsTableEditor() {
                 <Table.Td>
                   <NumberInput
                     value={row.gold}
-                    onChange={(value) => handlePointChange(index, 'gold', value as number)}
+                    onChange={(value) =>
+                      handlePointChange(index, "gold", value as number)
+                    }
                     min={0}
                     step={25}
                     w={100}
@@ -205,7 +206,9 @@ export function PointsTableEditor() {
                 <Table.Td>
                   <NumberInput
                     value={row.silver}
-                    onChange={(value) => handlePointChange(index, 'silver', value as number)}
+                    onChange={(value) =>
+                      handlePointChange(index, "silver", value as number)
+                    }
                     min={0}
                     step={25}
                     w={100}
@@ -214,7 +217,9 @@ export function PointsTableEditor() {
                 <Table.Td>
                   <NumberInput
                     value={row.bronze}
-                    onChange={(value) => handlePointChange(index, 'bronze', value as number)}
+                    onChange={(value) =>
+                      handlePointChange(index, "bronze", value as number)
+                    }
                     min={0}
                     step={25}
                     w={100}
@@ -223,7 +228,9 @@ export function PointsTableEditor() {
                 <Table.Td>
                   <NumberInput
                     value={row.invitational}
-                    onChange={(value) => handlePointChange(index, 'invitational', value as number)}
+                    onChange={(value) =>
+                      handlePointChange(index, "invitational", value as number)
+                    }
                     min={0}
                     step={25}
                     w={100}

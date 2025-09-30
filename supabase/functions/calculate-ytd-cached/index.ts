@@ -23,7 +23,7 @@ function getPointsForPosition(
   for (const row of pointsTable) {
     const range = row.position_range;
 
-    if (range === '100+' && position > 100) {
+    if (range === '101+' && position >= 101) {
       return row[category as keyof PointsTable] as number;
     }
 

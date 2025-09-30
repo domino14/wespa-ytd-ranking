@@ -102,7 +102,7 @@ INSERT INTO points_config (position_range, platinum, gold, silver, bronze, invit
 ('86-90', 450, 400, 300, 200, 300),
 ('91-95', 400, 350, 250, 175, 275),
 ('96-100', 350, 300, 225, 150, 250),
-('100+', 300, 250, 200, 125, 225);
+('101+', 300, 250, 200, 125, 225);
 
 -- Create indexes for performance
 CREATE INDEX idx_tournaments_date ON tournaments(date);
