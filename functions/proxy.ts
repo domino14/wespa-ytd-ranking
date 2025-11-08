@@ -248,6 +248,171 @@ export default {
       }
     }
 
+    // Route: /api/tournament-info/:id - Get tournament info by ID (UUID or wespa_id)
+    if (url.pathname.startsWith('/api/tournament-info/') && request.method === 'GET') {
+      try {
+        const id = url.pathname.split('/').pop();
+
+        if (!id) {
+          return new Response(JSON.stringify({ error: 'Tournament ID is required' }), {
+            status: 400,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+        }
+
+        // Check if ID is UUID or integer (wespa_id)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+        const queryUrl = isUUID
+          ? `${env.SUPABASE_URL}/rest/v1/tournaments?select=*&id=eq.${id}`
+          : `${env.SUPABASE_URL}/rest/v1/tournaments?select=*&wespa_id=eq.${id}`;
+
+        const response = await fetch(queryUrl, {
+          headers: {
+            'apikey': env.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Supabase error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data || data.length === 0) {
+          return new Response(JSON.stringify({ error: 'Tournament not found' }), {
+            status: 404,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+        }
+
+        return new Response(JSON.stringify(data[0]), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=180', // Cache for 3 minutes
+          },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({
+          error: 'Failed to fetch tournament info',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    }
+
+    // Route: /api/tournaments/categorized - Get recent categorized tournaments
+    if (url.pathname === '/api/tournaments/categorized' && request.method === 'GET') {
+      try {
+        // Parse query parameters
+        const limitParam = url.searchParams.get('limit');
+        const category = url.searchParams.get('category');
+        const year = url.searchParams.get('year');
+
+        // Validate and set limit (default 10, max 100)
+        let limit = 10;
+        if (limitParam) {
+          const parsedLimit = parseInt(limitParam, 10);
+          if (isNaN(parsedLimit) || parsedLimit < 1) {
+            return new Response(JSON.stringify({ error: 'Invalid limit parameter' }), {
+              status: 400,
+              headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              },
+            });
+          }
+          limit = Math.min(parsedLimit, 100);
+        }
+
+        // Validate category if provided
+        const validCategories = ['platinum', 'gold', 'silver', 'bronze', 'invitational'];
+        if (category && !validCategories.includes(category)) {
+          return new Response(JSON.stringify({
+            error: 'Invalid category',
+            valid_categories: validCategories
+          }), {
+            status: 400,
+            headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            },
+          });
+        }
+
+        // Build query URL
+        let queryUrl = `${env.SUPABASE_URL}/rest/v1/tournaments?select=*&category=not.is.null&order=date.desc&limit=${limit}`;
+
+        if (category) {
+          queryUrl += `&category=eq.${category}`;
+        }
+
+        if (year) {
+          const parsedYear = parseInt(year, 10);
+          if (isNaN(parsedYear)) {
+            return new Response(JSON.stringify({ error: 'Invalid year parameter' }), {
+              status: 400,
+              headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              },
+            });
+          }
+          queryUrl += `&date=gte.${year}-01-01&date=lte.${year}-12-31`;
+        }
+
+        const response = await fetch(queryUrl, {
+          headers: {
+            'apikey': env.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Supabase error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        return new Response(JSON.stringify({
+          count: data.length,
+          tournaments: data
+        }), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control': 'public, max-age=180', // Cache for 3 minutes
+          },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({
+          error: 'Failed to fetch categorized tournaments',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }), {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        });
+      }
+    }
+
     return new Response('Not Found', { status: 404 });
   },
 };
