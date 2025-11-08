@@ -45,6 +45,7 @@ export interface YTDStanding {
   tournaments_played: number;
   best_finish: number;
   last_updated: string;
+  wespa_id?: number;
 }
 
 export interface PointsTable {

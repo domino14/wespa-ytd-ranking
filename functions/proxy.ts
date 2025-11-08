@@ -198,10 +198,10 @@ export default {
           }
 
           const activeYearId = yearData[0].id;
-          queryUrl = `${env.SUPABASE_URL}/rest/v1/ytd_standings?select=player_name,total_points,tournaments_played,best_finish,last_updated&year_config_id=eq.${activeYearId}&order=total_points.desc`;
+          queryUrl = `${env.SUPABASE_URL}/rest/v1/ytd_standings?select=player_name,total_points,tournaments_played,best_finish,last_updated,players!player_id(wespa_id)&year_config_id=eq.${activeYearId}&order=total_points.desc`;
         } else {
           // Direct year ID query
-          queryUrl = `${env.SUPABASE_URL}/rest/v1/ytd_standings?select=player_name,total_points,tournaments_played,best_finish,last_updated&year_config_id=eq.${yearId}&order=total_points.desc`;
+          queryUrl = `${env.SUPABASE_URL}/rest/v1/ytd_standings?select=player_name,total_points,tournaments_played,best_finish,last_updated,players!player_id(wespa_id)&year_config_id=eq.${yearId}&order=total_points.desc`;
         }
 
         const response = await fetch(queryUrl, {
@@ -218,7 +218,16 @@ export default {
 
         const data = await response.json();
 
-        return new Response(JSON.stringify(data), {
+        // Flatten the players object to hoist wespa_id to top level
+        const transformedData = data.map((item: any) => {
+          const { players, ...rest } = item;
+          return {
+            ...rest,
+            wespa_id: players?.wespa_id
+          };
+        });
+
+        return new Response(JSON.stringify(transformedData), {
           headers: {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*',
