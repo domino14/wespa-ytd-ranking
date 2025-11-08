@@ -531,7 +531,7 @@ export function TournamentList({ startDate, endDate, onComputeYTD }: TournamentL
                       { value: 'gold', label: 'Gold' },
                       { value: 'silver', label: 'Silver' },
                       { value: 'bronze', label: 'Bronze' },
-                      { value: 'invitational', label: 'Invitational' },
+                      // { value: 'invitational', label: 'Invitational' },
                     ]}
                     w={180}
                   />
