@@ -121,7 +121,7 @@ export function Standings() {
     if (rank === 2) return <Badge color="gray" size="md" style={{ minWidth: '50px' }}>2nd</Badge>;
     if (rank === 3) return <Badge color="orange" size="md" style={{ minWidth: '50px' }}>3rd</Badge>;
     if (rank <= 10) return <Badge color="blue" size="md" style={{ minWidth: '70px' }}>Top 10</Badge>;
-    if (rank <= 20) return <Badge color="cyan" size="md" style={{ minWidth: '70px' }}>Top 20</Badge>;
+    if (rank <= 24) return <Badge color="cyan" size="md" style={{ minWidth: '70px' }}>Top 24</Badge>;
     return null;
   };
 
