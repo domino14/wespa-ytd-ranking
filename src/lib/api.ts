@@ -6,7 +6,7 @@ import type { Tournament } from '../types';
 // Use local proxy in development, production URL in production
 const API_BASE = import.meta.env.DEV
   ? 'http://localhost:8787/api'
-  : 'https://wespa-proxy.delsolar.workers.dev/api';
+  : 'https://wespa-ytd.xword.club/api';
 
 export async function fetchTournaments(
   startYear: string,

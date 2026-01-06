@@ -1,7 +1,7 @@
 // Simple test to verify division filtering works correctly
 // Run with: node test-division-filtering.js
 
-const API_BASE = 'https://wespa-proxy.delsolar.workers.dev/api';
+const API_BASE = 'https://wespa-ytd.xword.club/api';
 
 async function testTournament1342() {
   console.log('Testing tournament 1342 division filtering...\n');

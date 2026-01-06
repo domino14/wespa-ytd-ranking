@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-https://wespa-proxy.delsolar.workers.dev/api
+https://wespa-ytd.xword.club/api
 ```
 
 ## Overview
@@ -17,7 +17,7 @@ First, call this endpoint to retrieve all available seasons and their SeasonIDs.
 
 **Example Request:**
 ```bash
-curl https://wespa-proxy.delsolar.workers.dev/api/seasons
+curl https://wespa-ytd.xword.club/api/seasons
 ```
 
 **Response:**
@@ -58,7 +58,7 @@ Use this endpoint to get standings for the default/active season without needing
 
 **Example Request:**
 ```bash
-curl https://wespa-proxy.delsolar.workers.dev/api/standings/current
+curl https://wespa-ytd.xword.club/api/standings/current
 ```
 
 **Response:**
@@ -104,7 +104,7 @@ Use this endpoint with a SeasonID from the `/seasons` endpoint to retrieve stand
 
 **Example Request:**
 ```bash
-curl https://wespa-proxy.delsolar.workers.dev/api/standings/550e8400-e29b-41d4-a716-446655440000
+curl https://wespa-ytd.xword.club/api/standings/550e8400-e29b-41d4-a716-446655440000
 ```
 
 **Response:** Same format as endpoint 2 (Current Season Standings)
@@ -125,12 +125,12 @@ Retrieve detailed information about a specific tournament, including its categor
 
 **Example Request (using WESPA ID):**
 ```bash
-curl https://wespa-proxy.delsolar.workers.dev/api/tournament-info/12345
+curl https://wespa-ytd.xword.club/api/tournament-info/12345
 ```
 
 **Example Request (using UUID):**
 ```bash
-curl https://wespa-proxy.delsolar.workers.dev/api/tournament-info/550e8400-e29b-41d4-a716-446655440000
+curl https://wespa-ytd.xword.club/api/tournament-info/550e8400-e29b-41d4-a716-446655440000
 ```
 
 **Response:**
@@ -181,16 +181,16 @@ Retrieve a list of recent tournaments that have been categorized/tagged.
 **Example Requests:**
 ```bash
 # Get 10 most recent categorized tournaments
-curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized
+curl https://wespa-ytd.xword.club/api/tournaments/categorized
 
 # Get 20 most recent platinum tournaments
-curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?limit=20&category=platinum
+curl https://wespa-ytd.xword.club/api/tournaments/categorized?limit=20&category=platinum
 
 # Get all categorized tournaments from 2025
-curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?year=2025&limit=100
+curl https://wespa-ytd.xword.club/api/tournaments/categorized?year=2025&limit=100
 
 # Get gold tournaments from 2024
-curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?category=gold&year=2024
+curl https://wespa-ytd.xword.club/api/tournaments/categorized?category=gold&year=2024
 ```
 
 **Response:**
@@ -246,17 +246,17 @@ curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?catego
 
 1. **Get available seasons** (optional, if you need to list seasons):
    ```bash
-   curl https://wespa-proxy.delsolar.workers.dev/api/seasons
+   curl https://wespa-ytd.xword.club/api/seasons
    ```
 
 2. **Get current standings** (most common use case):
    ```bash
-   curl https://wespa-proxy.delsolar.workers.dev/api/standings/current
+   curl https://wespa-ytd.xword.club/api/standings/current
    ```
 
 3. **Get historical season** (using SeasonID from step 1):
    ```bash
-   curl https://wespa-proxy.delsolar.workers.dev/api/standings/{SeasonID}
+   curl https://wespa-ytd.xword.club/api/standings/{SeasonID}
    ```
 
 ## CORS Support
