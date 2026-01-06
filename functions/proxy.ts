@@ -42,7 +42,7 @@ export default {
           partname: body.partname
         });
 
-        const response = await fetch('https://wespa.org/aardvark/cgi-bin/find_tournament.pl', {
+        const response = await fetch('https://legacy.wespa.org/aardvark/cgi-bin/find_tournament.pl', {
           method: 'POST',
           body: formData,
         });
@@ -71,7 +71,7 @@ export default {
       const tournamentId = url.pathname.split('/').pop();
 
       try {
-        const response = await fetch(`https://wespa.org/aardvark/html/tournaments/${tournamentId}.html`);
+        const response = await fetch(`https://legacy.wespa.org/aardvark/html/tournaments/${tournamentId}.html`);
         const html = await response.text();
 
         return new Response(html, {
@@ -134,7 +134,7 @@ export default {
       const wespaId = url.pathname.split('/').pop();
 
       try {
-        const response = await fetch(`https://wespa.org/aardvark/html/players/${wespaId}.html`);
+        const response = await fetch(`https://legacy.wespa.org/aardvark/html/players/${wespaId}.html`);
         const html = await response.text();
 
         return new Response(html, {

@@ -68,7 +68,7 @@ export function parseTournamentListHTML(html: string): Omit<Tournament, 'id' | '
           wespa_id: wespaId,
           name: linkCell.textContent?.trim() || '',
           date: dateCell.textContent?.trim() || '',
-          url: `https://wespa.org${href}`,
+          url: `https://legacy.wespa.org${href}`,
         });
       }
     }

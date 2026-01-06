@@ -141,7 +141,7 @@ curl https://wespa-proxy.delsolar.workers.dev/api/tournament-info/550e8400-e29b-
   "name": "World Scrabble Championship 2025",
   "date": "2025-08-15",
   "category": "platinum",
-  "url": "https://wespa.org/aardvark/html/tournaments/12345.html",
+  "url": "https://legacy.wespa.org/aardvark/html/tournaments/12345.html",
   "created_at": "2025-01-01T00:00:00Z",
   "updated_at": "2025-01-15T12:00:00Z"
 }
@@ -204,7 +204,7 @@ curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?catego
       "name": "World Scrabble Championship 2025",
       "date": "2025-08-15",
       "category": "platinum",
-      "url": "https://wespa.org/aardvark/html/tournaments/12345.html",
+      "url": "https://legacy.wespa.org/aardvark/html/tournaments/12345.html",
       "created_at": "2025-01-01T00:00:00Z",
       "updated_at": "2025-01-15T12:00:00Z"
     },
@@ -214,7 +214,7 @@ curl https://wespa-proxy.delsolar.workers.dev/api/tournaments/categorized?catego
       "name": "National Championship 2025",
       "date": "2025-07-20",
       "category": "gold",
-      "url": "https://wespa.org/aardvark/html/tournaments/67890.html",
+      "url": "https://legacy.wespa.org/aardvark/html/tournaments/67890.html",
       "created_at": "2025-01-02T00:00:00Z",
       "updated_at": "2025-01-16T12:00:00Z"
     }
